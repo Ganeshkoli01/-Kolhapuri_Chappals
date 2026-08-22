@@ -40,7 +40,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         
       if (!error && data) {
         // Map joined data back to products
-        const dbItems = data.map(item => item.products).filter(Boolean) as Product[];
+        const dbItems = data.map(item => Array.isArray(item.products) ? item.products[0] : item.products).filter(Boolean) as unknown as Product[];
         
         // Merge local and db items (prefer db items for simplicity)
         // If there were local items, we could save them to DB here, but for now we'll just merge locally
