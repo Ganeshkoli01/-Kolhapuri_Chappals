@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #FAF7F2;
+  --color-cream-dark: #F8F5EE;
+  --color-maroon: #7A2021;
+  --color-maroon-dark: #671D22;
+  --color-saddle: #8B4513;
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-cream text-gray-900 font-sans;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-maroon-dark;
+  }
+}
+
+@layer utilities {
+  .text-shadow-sm {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-cream;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-saddle rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-maroon;
+}
+
+/* Print Styles */
+@media print {
+  body, html {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  * {
+    overflow: visible !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-modal, .print-modal * {
+    visibility: visible;
+  }
+
+  .print-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: white !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-header {
+    display: block !important;
+  }
+
+  .print-footer {
+    display: block !important;
+  }
+
+  .print-box {
+    border: 1px solid #e5e7eb !important;
+    background: #f9fafb !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .print-icon {
+    display: inline-block !important;
+  }
+}
