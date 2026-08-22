@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, User as UserIcon, LogOut } from 'lucide-react';
+import { Search, ShoppingBag, User as UserIcon, LogOut, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import logoIcon from '../assets/logo-icon.png';
 import logoFull from '../assets/logo-full.png';
 
@@ -14,6 +15,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, user, isAdmin }) => {
   const { setIsCartOpen, totalItems } = useCart();
+  const { setIsWishlistOpen, wishlistItems } = useWishlist();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const currentCategory = searchParams.get('category') || 'All';
@@ -45,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, user, isAdmin }) => 
         <div className="flex justify-between items-center h-20">
           
           {/* Left: Logo */}
-          <Link to="/" className="flex-shrink-0 flex items-center">
+          <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex-shrink-0 flex items-center">
             <img src={logoIcon} alt="PT Icon" className="w-10 h-10 sm:hidden object-contain rounded-full" />
             <img src={logoFull} alt="Panchganga Traders" className="h-16 hidden sm:block object-contain" />
           </Link>
@@ -71,6 +73,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, user, isAdmin }) => 
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             </form>
             
+            <button 
+              onClick={() => setIsWishlistOpen(true)}
+              className="relative text-gray-900 hover:text-maroon transition-colors group ml-2"
+            >
+              <Heart className="h-6 w-6" />
+              <span className="absolute -top-1 -right-1 bg-maroon text-cream text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                {wishlistItems.length}
+              </span>
+            </button>
+
             <button 
               onClick={() => setIsCartOpen(true)}
               className="relative text-gray-900 hover:text-maroon transition-colors group"

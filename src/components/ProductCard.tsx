@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import type { Product } from '../data/products';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import toast from 'react-hot-toast';
 
 interface ProductCardProps {
@@ -11,6 +12,9 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
+  const { toggleLike, isLiked } = useWishlist();
+  
+  const liked = isLiked(product.id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -46,6 +50,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </span>
           )}
         </div>
+        
+        {/* Wishlist Toggle */}
+        <button 
+          onClick={(e) => { e.preventDefault(); toggleLike(product); }}
+          className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full text-maroon hover:bg-maroon hover:text-white transition-colors z-10 shadow-sm"
+          title={liked ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart className="h-5 w-5" fill={liked ? "currentColor" : "none"} />
+        </button>
       </Link>
       
       {/* Content */}

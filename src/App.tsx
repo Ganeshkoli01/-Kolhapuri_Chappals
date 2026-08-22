@@ -7,6 +7,7 @@ import { Footer } from './components/Footer';
 import { AuthModal } from './components/AuthModal';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
+import { WishlistDrawer } from './components/WishlistDrawer';
 import { OrderConfirmation } from './pages/OrderConfirmation';
 import { ProductDetails } from './pages/ProductDetails';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -80,6 +81,8 @@ function App() {
       <CartDrawer 
         onCheckout={() => setIsCheckoutOpen(true)} 
       />
+
+      <WishlistDrawer />
       
       <CheckoutModal 
         isOpen={isCheckoutOpen} 

@@ -171,7 +171,7 @@ export const AdminProducts: React.FC = () => {
 
       {/* Add/Edit Modal */}
       {isModalOpen && editingProduct && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[120] flex items-start justify-center bg-black/60 p-4 overflow-y-auto">
           <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl relative my-8">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 z-10">
               <X className="h-6 w-6" />
