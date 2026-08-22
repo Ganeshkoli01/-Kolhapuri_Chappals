@@ -52,7 +52,8 @@ export const ProductGrid: React.FC = () => {
     });
   };
 
-  const [maxPrice, setMaxPrice] = useState(3000);
+  const [highestPrice, setHighestPrice] = useState(10000);
+  const [maxPrice, setMaxPrice] = useState(10000);
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   
   const [dbProducts, setDbProducts] = useState<Product[]>([]);
@@ -63,7 +64,14 @@ export const ProductGrid: React.FC = () => {
       if (error) {
         console.error('Error fetching products:', error);
       } else {
-        setDbProducts(data as Product[]);
+        const products = data as Product[];
+        setDbProducts(products);
+        if (products.length > 0) {
+          const maxP = Math.max(...products.map(p => p.price));
+          const roundedMax = Math.ceil(maxP / 100) * 100;
+          setHighestPrice(roundedMax);
+          setMaxPrice(roundedMax);
+        }
       }
     };
     fetchProducts();
@@ -74,17 +82,17 @@ export const ProductGrid: React.FC = () => {
       const matchCategory = selectedCategory === 'All' || product.category === selectedCategory;
       const matchSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           product.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchPrice = product.price <= maxPrice;
+      const matchPrice = maxPrice >= highestPrice ? true : product.price <= maxPrice;
       const matchSize = selectedSize === null || product.sizes.includes(selectedSize);
       
       return matchCategory && matchSearch && matchPrice && matchSize;
     });
-  }, [selectedCategory, searchQuery, maxPrice, selectedSize]);
+  }, [selectedCategory, searchQuery, maxPrice, selectedSize, highestPrice]);
 
   const clearFilters = () => {
     handleCategoryChange('All');
     handleSearchChange('');
-    setMaxPrice(3000);
+    setMaxPrice(highestPrice);
     setSelectedSize(null);
   };
 
@@ -146,16 +154,16 @@ export const ProductGrid: React.FC = () => {
               </label>
               <input 
                 type="range" 
-                min="500" 
-                max="3000" 
+                min="0" 
+                max={highestPrice} 
                 step="100"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
                 className="w-full accent-maroon"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>₹500</span>
-                <span>₹3000</span>
+                <span>₹0</span>
+                <span>₹{highestPrice}</span>
               </div>
             </div>
 
@@ -186,7 +194,7 @@ export const ProductGrid: React.FC = () => {
         <div className="flex-1">
           <div className="mb-6 flex justify-between items-end border-b border-gray-200 pb-4">
             <h2 className="text-3xl font-serif font-bold text-gray-900">
-              Trending Now
+              Our Collection
             </h2>
             <span className="text-sm text-gray-500">
               Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'result' : 'results'}

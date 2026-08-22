@@ -12,6 +12,10 @@ export interface Product {
   images: string[];
   is_trending: boolean;
   created_at?: string;
+  cod_available?: boolean;
+  tax_amount?: number;
+  shipping_charge?: number;
+  other_charges?: number;
 }
 
 // We no longer export the hardcoded products list.

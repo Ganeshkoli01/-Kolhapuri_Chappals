@@ -39,7 +39,11 @@ export const AdminProducts: React.FC = () => {
         sizes: [],
         stock_quantity: 0,
         images: [],
-        is_trending: false
+        is_trending: false,
+        cod_available: true,
+        tax_amount: 0,
+        shipping_charge: 0,
+        other_charges: 0
       });
     }
     setIsModalOpen(true);
@@ -50,21 +54,27 @@ export const AdminProducts: React.FC = () => {
     if (!editingProduct) return;
 
     try {
+      const payload = {
+        name: editingProduct.name,
+        slug: editingProduct.slug,
+        description: editingProduct.description,
+        price: editingProduct.price,
+        category: editingProduct.category,
+        sizes: editingProduct.sizes,
+        stock_quantity: editingProduct.stock_quantity,
+        images: editingProduct.images,
+        is_trending: editingProduct.is_trending,
+        cod_available: editingProduct.cod_available ?? true,
+        tax_amount: editingProduct.tax_amount ?? 0,
+        shipping_charge: editingProduct.shipping_charge ?? 0,
+        other_charges: editingProduct.other_charges ?? 0
+      };
+
       if (editingProduct.id) {
         // Update
         const { error } = await supabase
           .from('products')
-          .update({
-            name: editingProduct.name,
-            slug: editingProduct.slug,
-            description: editingProduct.description,
-            price: editingProduct.price,
-            category: editingProduct.category,
-            sizes: editingProduct.sizes,
-            stock_quantity: editingProduct.stock_quantity,
-            images: editingProduct.images,
-            is_trending: editingProduct.is_trending
-          })
+          .update(payload)
           .eq('id', editingProduct.id);
         if (error) throw error;
         toast.success('Product updated successfully');
@@ -72,7 +82,7 @@ export const AdminProducts: React.FC = () => {
         // Insert
         const { error } = await supabase
           .from('products')
-          .insert([editingProduct]);
+          .insert([payload]);
         if (error) throw error;
         toast.success('Product created successfully');
       }
@@ -230,10 +240,37 @@ export const AdminProducts: React.FC = () => {
                       onImagesChange={(imgs) => setEditingProduct({...editingProduct, images: imgs})}
                     />
                   </div>
-                  <div className="md:col-span-2 flex items-center">
-                    <input type="checkbox" id="trending" className="mr-2 accent-maroon"
-                      checked={editingProduct.is_trending} onChange={e => setEditingProduct({...editingProduct, is_trending: e.target.checked})} />
-                    <label htmlFor="trending" className="text-sm font-medium text-gray-700">Mark as Trending</label>
+                  
+                  {/* Extra Charges & COD */}
+                  <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-100">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tax Amount (₹)</label>
+                      <input required type="number" min="0" className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-maroon"
+                        value={editingProduct.tax_amount || 0} onChange={e => setEditingProduct({...editingProduct, tax_amount: Number(e.target.value)})} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Shipping Charge (₹)</label>
+                      <input required type="number" min="0" className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-maroon"
+                        value={editingProduct.shipping_charge || 0} onChange={e => setEditingProduct({...editingProduct, shipping_charge: Number(e.target.value)})} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Other Charges (₹)</label>
+                      <input required type="number" min="0" className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-maroon"
+                        value={editingProduct.other_charges || 0} onChange={e => setEditingProduct({...editingProduct, other_charges: Number(e.target.value)})} />
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 flex items-center space-x-6 pt-2">
+                    <div className="flex items-center">
+                      <input type="checkbox" id="trending" className="mr-2 accent-maroon"
+                        checked={editingProduct.is_trending} onChange={e => setEditingProduct({...editingProduct, is_trending: e.target.checked})} />
+                      <label htmlFor="trending" className="text-sm font-medium text-gray-700">Mark as Trending</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input type="checkbox" id="cod" className="mr-2 accent-maroon"
+                        checked={editingProduct.cod_available ?? true} onChange={e => setEditingProduct({...editingProduct, cod_available: e.target.checked})} />
+                      <label htmlFor="cod" className="text-sm font-medium text-gray-700">COD Available</label>
+                    </div>
                   </div>
                 </div>
                 

@@ -44,12 +44,6 @@ export const Hero: React.FC = () => {
               >
                 Shop the collection
               </button>
-              <button 
-                onClick={() => handleScroll('Women')}
-                className="w-full sm:w-auto px-8 py-3 bg-[#f2ebd9] hover:bg-white text-[#5a1c22] rounded-md font-medium transition-all text-center shadow-lg"
-              >
-                For women
-              </button>
             </div>
           </div>
         </div>

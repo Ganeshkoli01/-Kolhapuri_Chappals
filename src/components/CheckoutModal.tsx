@@ -41,6 +41,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, u
   const [savedAddress, setSavedAddress] = useState<any>(null);
   const [useSavedAddress, setUseSavedAddress] = useState(true);
 
+  const isCodAvailable = items.every(item => item.product.cod_available !== false);
+  const baseSubtotal = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const totalTax = items.reduce((sum, item) => sum + ((item.product.tax_amount || 0) * item.quantity), 0);
+  const totalShipping = items.reduce((sum, item) => sum + ((item.product.shipping_charge || 0) * item.quantity), 0);
+  const totalOther = items.reduce((sum, item) => sum + ((item.product.other_charges || 0) * item.quantity), 0);
+
+  useEffect(() => {
+    if (!isCodAvailable && paymentMethod === 'COD') {
+      setPaymentMethod('Razorpay');
+    }
+  }, [isCodAvailable, paymentMethod]);
+
   useEffect(() => {
     if (userId && isOpen) {
       const fetchProfile = async () => {
@@ -271,23 +283,42 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, u
                       <CreditCard className={`h-5 w-5 mr-3 ${paymentMethod === 'Razorpay' ? 'text-maroon' : 'text-gray-400'}`} />
                       <span className="font-medium text-sm">Online (Razorpay / Cards / UPI)</span>
                     </label>
-                    <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'COD' ? 'border-maroon bg-maroon/5 ring-1 ring-maroon' : 'hover:bg-gray-50'}`}>
-                      <input type="radio" name="payment" className="hidden" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} />
-                      <Banknote className={`h-5 w-5 mr-3 ${paymentMethod === 'COD' ? 'text-maroon' : 'text-gray-400'}`} />
-                      <span className="font-medium text-sm">Cash on Delivery</span>
+                    <label className={`flex items-center p-4 border rounded-xl transition-all ${paymentMethod === 'COD' ? 'border-maroon bg-maroon/5 ring-1 ring-maroon' : 'hover:bg-gray-50'} ${!isCodAvailable ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'cursor-pointer'}`}>
+                      <input type="radio" name="payment" className="hidden" checked={paymentMethod === 'COD'} disabled={!isCodAvailable} onChange={() => setPaymentMethod('COD')} />
+                      <Banknote className={`h-5 w-5 mr-3 flex-shrink-0 ${paymentMethod === 'COD' ? 'text-maroon' : 'text-gray-400'}`} />
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">Cash on Delivery</span>
+                        {!isCodAvailable && <span className="text-xs text-red-500 mt-0.5">Not available for some items in cart</span>}
+                      </div>
                     </label>
                   </div>
                 </div>
 
-                <div className="bg-cream p-4 rounded-xl">
-                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <div className="bg-cream p-4 rounded-xl space-y-2">
+                  <div className="flex justify-between text-sm text-gray-600">
                     <span>Subtotal</span>
-                    <span>₹{totalAmount.toLocaleString()}</span>
+                    <span>₹{baseSubtotal.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                  {totalTax > 0 && (
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Tax</span>
+                      <span>₹{totalTax.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm text-gray-600">
                     <span>Shipping</span>
-                    <span className="text-green-600 font-medium">Free</span>
+                    {totalShipping > 0 ? (
+                      <span>₹{totalShipping.toLocaleString()}</span>
+                    ) : (
+                      <span className="text-green-600 font-medium">Free</span>
+                    )}
                   </div>
+                  {totalOther > 0 && (
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Other Charges</span>
+                      <span>₹{totalOther.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-bold text-lg text-gray-900 border-t border-gray-200 mt-2 pt-2">
                     <span>Total</span>
                     <span>₹{totalAmount.toLocaleString()}</span>

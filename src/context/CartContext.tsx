@@ -55,7 +55,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const totalItems = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
-  const totalAmount = useMemo(() => items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0), [items]);
+  const totalAmount = useMemo(() => items.reduce((sum, item) => {
+    const p = item.product;
+    const basePrice = p.price;
+    const tax = p.tax_amount || 0;
+    const shipping = p.shipping_charge || 0;
+    const other = p.other_charges || 0;
+    return sum + ((basePrice + tax + shipping + other) * item.quantity);
+  }, 0), [items]);
 
   return (
     <CartContext.Provider value={{
