@@ -99,6 +99,12 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
                   <span className="text-gray-500">Payment Method:</span>
                   <span className="font-medium">{order.payment_method}</span>
                 </div>
+                {order.phonepe_transaction_id && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">PhonePe Txn:</span>
+                    <span className="font-mono text-xs mt-1">{order.phonepe_transaction_id}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-500">Payment Status:</span>
                   <span className={`font-bold uppercase ${

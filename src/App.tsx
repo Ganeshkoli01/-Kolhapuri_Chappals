@@ -12,6 +12,8 @@ import { OrderConfirmation } from './pages/OrderConfirmation';
 import { ProductDetails } from './pages/ProductDetails';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Profile } from './pages/Profile';
+import { VerifyPayment } from './pages/VerifyPayment';
+import { PaymentFailed } from './pages/PaymentFailed';
 import { supabase } from './lib/supabase';
 
 const Home = () => {
@@ -68,6 +70,8 @@ function App() {
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
           <Route path="/profile" element={user ? <Profile userId={user.id} /> : <div className="p-20 text-center text-maroon font-bold">Please sign in to view your profile.</div>} />
           <Route path="/admin/*" element={isAdmin ? <AdminDashboard /> : <div className="p-20 text-center text-red-500 font-bold">Access Denied</div>} />
+          <Route path="/payment/verify" element={<VerifyPayment />} />
+          <Route path="/payment/failed" element={<PaymentFailed />} />
         </Routes>
       </main>
       

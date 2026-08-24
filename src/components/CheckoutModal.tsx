@@ -11,25 +11,12 @@ interface CheckoutModalProps {
   userId: string | undefined;
 }
 
-const loadRazorpay = () => {
-  return new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => {
-      resolve(true);
-    };
-    script.onerror = () => {
-      resolve(false);
-    };
-    document.body.appendChild(script);
-  });
-};
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, userId }) => {
   const { items, totalAmount, clearCart } = useCart();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'Razorpay' | 'COD'>('Razorpay');
+  const [paymentMethod, setPaymentMethod] = useState<'Razorpay' | 'COD' | 'PhonePe'>('PhonePe');
   const [address, setAddress] = useState({
     fullName: '',
     phone: '',
@@ -49,7 +36,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, u
 
   useEffect(() => {
     if (!isCodAvailable && paymentMethod === 'COD') {
-      setPaymentMethod('Razorpay');
+      setPaymentMethod('PhonePe');
     }
   }, [isCodAvailable, paymentMethod]);
 
@@ -87,6 +74,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, u
     }
     
     setLoading(true);
+
+    if (paymentMethod === 'PhonePe') {
+      await handlePhonePeCheckout();
+      return;
+    }
 
     if (paymentMethod === 'COD') {
       try {
@@ -138,73 +130,35 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, u
       return;
     }
 
-    const res = await loadRazorpay();
-    if (!res) {
-      toast.error('Razorpay SDK failed to load. Are you online?');
-      setLoading(false);
-      return;
-    }
+  };
 
+  const handlePhonePeCheckout = async () => {
     try {
-      // 1. Create Order via Edge Function
-      const { data, error } = await supabase.functions.invoke('razorpay-create-order', {
-        body: { amount: totalAmount, currency: 'INR' }
+      const redirectUrl = `${window.location.origin}/payment/verify`;
+      const { data, error } = await supabase.functions.invoke('phonepe-create-payment', {
+        body: { 
+          orderId: `ORDER_${Date.now()}`, 
+          amount: totalAmount, 
+          userId, 
+          redirectUrl 
+        }
       });
 
-      if (error || !data) throw error || new Error('Failed to create order');
+      if (error || !data) throw error || new Error('Failed to create PhonePe payment');
 
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_mock', 
-        amount: data.amount,
-        currency: data.currency,
-        name: 'Panchganga Traders',
-        description: 'Premium Leather Chappals',
-        order_id: data.id,
-        handler: async function (response: any) {
-          toast.loading('Verifying payment...', { id: 'verify' });
-          
-          try {
-            // 2. Verify Payment via Edge Function
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('razorpay-verify-payment', {
-              body: {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                userId,
-                cartItems: items,
-                totalAmount,
-                shippingAddress: address
-              }
-            });
+      // Save checkout data temporarily so we can verify it upon return
+      sessionStorage.setItem('pending_checkout', JSON.stringify({
+        merchantTransactionId: data.merchantTransactionId,
+        items,
+        totalAmount,
+        address,
+        userId
+      }));
 
-            if (verifyError || !verifyData?.success) {
-              throw verifyError || new Error('Verification failed');
-            }
-
-            toast.success('Payment successful!', { id: 'verify' });
-            clearCart();
-            onClose();
-            navigate('/order-confirmation', { state: { orderId: verifyData.orderId } });
-
-          } catch (err: any) {
-            toast.error(err.message || 'Payment verification failed', { id: 'verify' });
-          }
-        },
-        prefill: {
-          name: address.fullName,
-          contact: address.phone,
-        },
-        theme: {
-          color: '#671D22'
-        }
-      };
-
-      const paymentObject = new (window as any).Razorpay(options);
-      paymentObject.open();
-
+      // Redirect to PhonePe
+      window.location.href = data.redirectInfo.url;
     } catch (err: any) {
-      toast.error(err.message || 'Failed to initialize checkout');
-    } finally {
+      toast.error(err.message || 'Failed to initialize PhonePe');
       setLoading(false);
     }
   };
@@ -278,10 +232,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, u
                 <div>
                   <h3 className="font-medium text-gray-900 border-b pb-2 mb-4">Payment Method</h3>
                   <div className="space-y-3">
-                    <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'Razorpay' ? 'border-maroon bg-maroon/5 ring-1 ring-maroon' : 'hover:bg-gray-50'}`}>
-                      <input type="radio" name="payment" className="hidden" checked={paymentMethod === 'Razorpay'} onChange={() => setPaymentMethod('Razorpay')} />
-                      <CreditCard className={`h-5 w-5 mr-3 ${paymentMethod === 'Razorpay' ? 'text-maroon' : 'text-gray-400'}`} />
-                      <span className="font-medium text-sm">Online (Razorpay / Cards / UPI)</span>
+                    <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'PhonePe' ? 'border-maroon bg-maroon/5 ring-1 ring-maroon' : 'hover:bg-gray-50'}`}>
+                      <input type="radio" name="payment" className="hidden" checked={paymentMethod === 'PhonePe'} onChange={() => setPaymentMethod('PhonePe')} />
+                      <CreditCard className={`h-5 w-5 mr-3 ${paymentMethod === 'PhonePe' ? 'text-maroon' : 'text-gray-400'}`} />
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">Online (UPI, Cards, Wallets)</span>
+                      </div>
                     </label>
                     <label className={`flex items-center p-4 border rounded-xl transition-all ${paymentMethod === 'COD' ? 'border-maroon bg-maroon/5 ring-1 ring-maroon' : 'hover:bg-gray-50'} ${!isCodAvailable ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'cursor-pointer'}`}>
                       <input type="radio" name="payment" className="hidden" checked={paymentMethod === 'COD'} disabled={!isCodAvailable} onChange={() => setPaymentMethod('COD')} />
